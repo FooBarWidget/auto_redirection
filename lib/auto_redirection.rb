@@ -178,7 +178,7 @@
 # depending on where the visitor came from. In other words, we want to be able
 # to *nest* redirection information.
 #
-# Luckily, auto_redirections takes care of this for you automatically. We modify
+# Luckily, auto_redirection takes care of this for you automatically. We modify
 # CommentsController as we normally would:
 #
 #   class CommentsController < ApplicationController
