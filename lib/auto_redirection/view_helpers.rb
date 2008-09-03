@@ -31,25 +31,6 @@ module ViewHelpers
 	def pass_redirection_information
 		return render_redirection_information(get_redirection_information)
 	end
-	
-	def auto_redirect_to(location, params = {})
-		# TODO: merge this with 'auto_redirect_to' in ControllerExtensions.
-		case location
-		when :here
-			info = {
-				'controller' => controller.controller_path,
-				'action' => controller.action_name,
-				'method' => controller.request.method,
-				'params' => controller.params.merge(params)
-			}
-			logger.debug("Auto-Redirection: saving redirection information " <<
-				"for: #{controller.controller_path}/#{controller.action_name}" <<
-				" (#{request.method}), parameters: #{info['params'].inspect}")
-		else
-			raise ArgumentError, "Unknown location '#{location}'."
-		end
-		return render_redirection_information(info)
-	end
 
 private
 	def get_redirection_information
