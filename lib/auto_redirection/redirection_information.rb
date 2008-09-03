@@ -89,15 +89,14 @@ class ControllerRedirectionInformation < RedirectionInformation
 	end
 	
 	def path
-		object = Object.new
-		metaclass = class << object
-			self
+		klass = Class.new do
+			include ActionController::UrlWriter
 		end
-		metaclass.send(:include, ActionController::UrlWriter)
+		url_generator = klass.new
 		args = params.merge(:only_path => true,
 			:controller => controller,
 			:action => action)
-		return metaclass.url_for(args)
+		return URI.parse(url_generator.url_for(args)).path
 	end
 	
 	def marshal(encrypt = true, ascii7 = true)

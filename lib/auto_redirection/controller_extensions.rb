@@ -159,7 +159,7 @@ private
 	def match_exclusion_list(redirection_info, exclusion_list)
 		case exclusion_list
 		when Array
-			return exclusion_list.all? do |l|
+			return exclusion_list.any? do |l|
 				match_exclusion_list(redirection_info, l)
 			end
 		when Hash

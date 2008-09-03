@@ -162,4 +162,20 @@ class SimpleRedirectionTest < ActionController::TestCase
 		get(:action_auto_redirect)
 		assert_redirected_to '/'
 	end
+	
+	test "match_exclusion_list with a Regexp" do
+		info = ControllerRedirectionInformation.new('users', 'create', { :id => 1 })
+		assert @controller.send(:match_exclusion_list, info, %r{^/users/create})
+		assert @controller.send(:match_exclusion_list, info, %r{^/users})
+	end
+	
+	test "match_exclusion_list with a String" do
+		info = ControllerRedirectionInformation.new('users', 'create', { :id => 1 })
+		assert @controller.send(:match_exclusion_list, info, '/users/create')
+		
+		info = ControllerRedirectionInformation.new('users', 'create', { :id => 1, :hello => 'world' })
+		assert @controller.send(:match_exclusion_list, info, '/users/create')
+		
+		assert !@controller.send(:match_exclusion_list, info, '/users')
+	end
 end
