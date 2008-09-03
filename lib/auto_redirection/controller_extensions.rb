@@ -37,6 +37,8 @@ protected
 	end
 	
 	def redirection_parameter_for_current_request
+		# TODO: document and test this
+		return redirection_information_for_current_request.marshal
 	end
 	
 	# The current request may contain redirection information.
