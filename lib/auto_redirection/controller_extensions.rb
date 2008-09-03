@@ -41,6 +41,12 @@ protected
 		return redirection_information_for_current_request.marshal
 	end
 	
+	def clear_redirection_information
+		# TODO: document and test this
+		@_redirection_information_given = true
+		@_redirection_information = nil
+	end
+	
 	# The current request may contain redirection information.
 	# If auto-redirection information is given, then this method will redirect
 	# the HTTP client to that location (by calling +redirect_to+) and return true.

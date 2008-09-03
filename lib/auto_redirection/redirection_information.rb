@@ -110,6 +110,12 @@ class ControllerRedirectionInformation < RedirectionInformation
 		end
 	end
 	
+	def inspect
+		return sprintf("#<%s:0x%x @controller=%s @action=%s @method=%s\n" <<
+			"@params=%s>", self.class, object_id, controller.inspect,
+			action.inspect, method.inspect, params.inspect)
+	end
+	
 	def ==(other)
 		return other.is_a?(ControllerRedirectionInformation) &&
 		       other.controller == controller &&

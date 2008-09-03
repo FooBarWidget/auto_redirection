@@ -31,6 +31,11 @@ module ViewHelpers
 	def pass_redirection_information
 		return render_redirection_information(get_redirection_information)
 	end
+	
+	def save_redirection_information
+		# TODO: document and test this
+		return render_redirection_information(controller.send(:redirection_information_for_current_request))
+	end
 
 private
 	def get_redirection_information
@@ -48,7 +53,9 @@ private
 			html << ">"
 			if AutoRedirection.debug?
 				# Value intentionally not escaped.
-				html << "\n<!-- #{info.inspect} -->"
+				debug_info = info.inspect
+				debug_info.gsub!('--', '~~')
+				html << "\n<!-- #{debug_info} -->"
 			end
 			return html
 		else
