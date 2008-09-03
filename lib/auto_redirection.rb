@@ -178,8 +178,8 @@
 # depending on where the visitor came from. In other words, we want to be able
 # to *nest* redirection information.
 #
-# Right now, CommentsController will always redirect to '/comments/id)' after
-# having created a comments. So we change it a little:
+# Luckily, auto_redirections takes care of this for you automatically. We modify
+# CommentsController as we normally would:
 #
 #   class CommentsController < ApplicationController
 #      def create
@@ -198,24 +198,28 @@
 #   end
 #
 # Now, CommentsController will redirect using whatever auto-redirection information
-# it has received. If no auto-redirection information is given (i.e.
-# +attempt_auto_redirect+ returns false) then it returns the visitor to
-# '/comments/(id)'.
+# it has received. When LoginController is done, it will redirect the visitor
+# back to CommentsController, and will pass to CommentsController whatever
+# redirection information that CommentsController originally received. This
+# allows CommentsController to redirect the visitor back to either '/books/(id)'
+# or '/books/(review)'.
 #
 #
 # === Saving POST auto-redirection information without a session
 #
-# The flash is not available if sessions are disabled. In that case, you have to pass
-# auto-redirection information via a GET parameter, like this:
+# The flash is not available if sessions are disabled. In that case, you cannot
+# use +save_redirection_information+. Instead, you have to pass redirection
+# information via a GET parameter, like this:
 #
-#   redirect_to('/login/login_form', :auto_redirect_to => current_request)
+#   redirect_to('/login/login_form',
+#      :_redirection_information => redirection_parameter_for_current_request)
 #
-# The +current_request+ method returns auto-redirection information for the
-# current request.
+# The +redirection_parameter_for_current_request+ method returns auto-redirection
+# information for the current request.
 #
 # == Security
 #
-# Auto-redirection information is encrypted, so it cannot be read or tampered with
+# Redirection information is encrypted, so it cannot be read or tampered with
 # by third parties. Be sure to set a custom encryption key instead of leaving
 # the key at the default value. For example, put this in your environment.rb:
 #

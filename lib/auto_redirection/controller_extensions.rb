@@ -22,50 +22,23 @@ module AutoRedirection
 
 module ControllerExtensions
 protected
-	# Saves redirection information into the flash, so that the next
-	# controller action may use this information.
+	# Saves the current controller's name, action, HTTP method and parameters
+	# as redirection information into the flash. This allows the next controller
+	# action to use this information to redirect back to this controller action,
+	# with the same HTTP method and parameters.
 	#
-	# +location+ may either be +:here+, or a String containing an URL.
-	def save_redirection_information(location = :here)
-		case location
-		when :here
-			parameters = params
-			current_redirection_info = get_redirection_information
-			if current_redirection_info
-				parameters = params.merge(:_redirection_information =>
-					current_redirection_info.marshal)
-			else
-				parameters = params
-			end
-			
-			redirection_info_to_pass = ControllerRedirectionInformation.new(
-				controller_path, action_name, parameters, request.method)
-			flash[:_redirection_information] = redirection_info_to_pass.marshal(true, false)
-			logger.debug("Auto-Redirection: saving redirection information " <<
-				"for: #{controller_path}/#{action_name} (#{request.method})")
-		when String
-			info = UrlRedirectionInformation.new(location)
-			flash[:_redirection_information] = info.marshal(true, false)
-			logger.debug("Auto-Redirection: saving redirection information " <<
-				"for: #{location}")
-		else
-			raise ArgumentError, "Unknown location #{location.inspect}."
-		end
+	# The redirection information that the current controller action has
+	# received is also saved, so that nested redirections is possible.
+	def save_redirection_information
+		flash[:_redirection_information] =
+			redirection_information_for_current_request.marshal(true, false)
+		logger.debug("Auto-Redirection: saving redirection information " <<
+			"for: #{controller_path}/#{action_name} (#{request.method})")
 	end
 	
-	# Returns auto-redirection information for the current request.
-	def current_request
-		@_current_request ||= begin
-			info = {
-				'controller' => controller_path,
-				'action' => action_name,
-				'method' => request.method,
-				'params' => params
-			}
-			Encryption.encrypt(Marshal.dump(info))
-		end
+	def redirection_parameter_for_current_request
 	end
-
+	
 	# The current request may contain redirection information.
 	# If auto-redirection information is given, then this method will redirect
 	# the HTTP client to that location (by calling +redirect_to+) and return true.
@@ -147,6 +120,19 @@ private
 			@_redirection_information = info
 		end
 		return @_redirection_information
+	end
+	
+	def redirection_information_for_current_request
+		parameters = params
+		current_redirection_info = get_redirection_information
+		if current_redirection_info
+			parameters = params.merge(:_redirection_information =>
+				current_redirection_info.marshal)
+		else
+			parameters = params
+		end
+		return ControllerRedirectionInformation.new(
+			controller_path, action_name, parameters, request.method)
 	end
 end
 
