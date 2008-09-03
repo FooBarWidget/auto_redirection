@@ -109,11 +109,14 @@ protected
 	#   is supposed to be redirected to matches this regular expression, then
 	#   the browser will be redirected to the default location instead.
 	def auto_redirect(options = {})
+		# TODO: document that :exclude may also be a Hash, Array or String.
 		should_redirect_to_default = false
 		if options[:exclude]
 			info = get_redirection_information
-			should_redirect_to_default = match_exclusion_list(info,
-				options[:exclude])
+			if info
+				should_redirect_to_default = match_exclusion_list(info,
+					options[:exclude])
+			end
 		end
 		if !should_redirect_to_default
 			should_redirect_to_default = !attempt_auto_redirect
