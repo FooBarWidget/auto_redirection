@@ -28,6 +28,10 @@ class TestController < ActionController::Base
 		end
 	end
 	
+	def action_auto_redirect
+		auto_redirect(:exclude => %r{^/forbidden}, :default => '/')
+	end
+	
 	def action_save_redirection_information
 		save_redirection_information
 		render :nothing => true
@@ -148,5 +152,14 @@ class SimpleRedirectionTest < ActionController::TestCase
 		info = RedirectionInformation.load(input_value)
 		assert_kind_of UrlRedirectionInformation, info
 		assert_equal '/foo', info.url
+	end
+	
+	
+	##### Other tests #####
+	
+	test "auto_redirect(:exclude => ...) works" do
+		@controller.request.headers["Referer"] = '/forbidden'
+		get(:action_auto_redirect)
+		assert_redirected_to '/'
 	end
 end

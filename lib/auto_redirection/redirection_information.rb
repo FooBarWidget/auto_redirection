@@ -19,6 +19,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'uri'
+
 module AutoRedirection
 
 class RedirectionInformation
@@ -58,6 +60,10 @@ class UrlRedirectionInformation < RedirectionInformation
 		return :get
 	end
 	
+	def path
+		return URI.parse(url).path
+	end
+	
 	def marshal(encrypt = true, ascii7 = true)
 		super do
 			Marshal.dump({
@@ -80,6 +86,18 @@ class ControllerRedirectionInformation < RedirectionInformation
 		@action = action_name
 		@params = params || {}
 		@method = method || :get
+	end
+	
+	def path
+		object = Object.new
+		metaclass = class << object
+			self
+		end
+		metaclass.send(:include, ActionController::UrlWriter)
+		args = params.merge(:only_path => true,
+			:controller => controller,
+			:action => action)
+		return metaclass.url_for(args)
 	end
 	
 	def marshal(encrypt = true, ascii7 = true)

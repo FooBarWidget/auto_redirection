@@ -96,11 +96,30 @@ protected
 	end
 	
 	# Try to redirect the browser by calling +attempt_auto_redirect+. If that
-	# method returns false, then the browser will be redirected to +root_path+
-	# instead.
-	def auto_redirect
-		if !attempt_auto_redirect
-			redirect_to root_path
+	# method returns false, then the browser will be redirected to a the
+	# specified default location instead.
+	#
+	# Options:
+	# - +default+: The default location that this method will redirect the
+	#   browser to, if +attempt_auto_redirect+ fails or if the redirection
+	#   target matches +exclude+. This may be any value that +redirect_to+
+	#   would accept.
+	# - +exclude+: A regular expression which specifies a path that
+	#   +auto_redirect+ must *not* redirect to. If the place that the browser
+	#   is supposed to be redirected to matches this regular expression, then
+	#   the browser will be redirected to the default location instead.
+	def auto_redirect(options = {})
+		should_redirect_to_default = false
+		if options[:exclude]
+			info = get_redirection_information
+			should_redirect_to_default = match_exclusion_list(info,
+				options[:exclude])
+		end
+		if !should_redirect_to_default
+			should_redirect_to_default = !attempt_auto_redirect
+		end
+		if should_redirect_to_default
+			redirect_to(options[:default] || root_path)
 		end
 	end
 
@@ -135,6 +154,24 @@ private
 		end
 		return ControllerRedirectionInformation.new(
 			controller_path, action_name, parameters, request.method)
+	end
+	
+	def match_exclusion_list(redirection_info, exclusion_list)
+		case exclusion_list
+		when Array
+			return exclusion_list.all? do |l|
+				match_exclusion_list(redirection_info, l)
+			end
+		when Hash
+			args = exclusion_list.merge(:path_only => true)
+			return redirection_info.path == url_for(args)
+		when String
+			return redirection_info.path == exclusion_list
+		when Regexp
+			return redirection_info.path =~ exclusion_list
+		else
+			raise ArgumentError
+		end
 	end
 end
 
