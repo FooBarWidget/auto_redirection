@@ -65,7 +65,7 @@ class NestedRedirectionTest < ActionController::IntegrationTest
 		assert_response :ok
 		book_redirection_info = UrlRedirectionInformation.new('/books/show/1')
 		
-		# He posts a comment.
+		# He posts a comment using the form on that page.
 		post("/comments/create", { :summary => "hi" }, :HTTP_REFERER => "/books/show/1")
 		# And gets redirected to the login page.
 		assert_redirected_to '/login/login_form'
