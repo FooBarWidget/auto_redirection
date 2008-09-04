@@ -93,9 +93,14 @@ class ControllerRedirectionInformation < RedirectionInformation
 			include ActionController::UrlWriter
 		end
 		url_generator = klass.new
-		args = params.merge(:only_path => true,
+		args = params.with_indifferent_access.merge(
+			:only_path => true,
 			:controller => controller,
 			:action => action)
+		# Turn into a normal Hash. url_for doesn't play well with
+		# HashWithIndifferentAccess.
+		args = {}.merge(args)
+		args.symbolize_keys!
 		return URI.parse(url_generator.url_for(args)).path
 	end
 	
