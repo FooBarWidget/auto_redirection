@@ -35,7 +35,9 @@ class RedirectionInformation
 			end
 		end
 		info = Marshal.load(data)
-		if info[:url]
+		if info.nil?
+			return NoRedirectionInformation.new
+		elsif info[:url]
 			return UrlRedirectionInformation.new(info[:url])
 		else
 			return ControllerRedirectionInformation.new(
@@ -133,6 +135,20 @@ class ControllerRedirectionInformation < RedirectionInformation
 		       other.action     == action &&
 		       other.params     == params &&
 		       other.method     == method
+	end
+end
+
+# May be passed to the next controller action to indicate that the flash
+# and the Referer HTTP header must not be consulted.
+class NoRedirectionInformation < RedirectionInformation
+	def marshal
+		super do
+			Marshal.dump(nil)
+		end
+	end
+	
+	def ==(other)
+		return other.is_a?(NoRedirectionInformation)
 	end
 end
 

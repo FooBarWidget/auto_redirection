@@ -135,7 +135,8 @@ class SimpleRedirectionTest < ActionController::TestCase
 				'controller' => @controller.controller_path,
 				'action' => "action_save_redirection_information",
 				'hello' => "world",
-				'foo' => ["bar", "baz"]
+				'foo' => ["bar", "baz"],
+				'_redirection_information' => NoRedirectionInformation.new.marshal
 			}, info.params)
 	end
 	

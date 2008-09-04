@@ -59,7 +59,7 @@ protected
 	# 3. The "Referer" HTTP header.
 	def attempt_auto_redirect
 		info = get_redirection_information
-		if info.nil?
+		if info.nil? || info.is_a?(NoRedirectionInformation)
 			return false
 		end
 		
@@ -140,7 +140,11 @@ private
 	def get_redirection_information
 		if !@_redirection_information_given
 			if params.has_key?(:_redirection_information)
-				info = RedirectionInformation.load(params[:_redirection_information])
+				if params[:_redirection_information].empty?
+					info = NoRedirectionInformation.new
+				else
+					info = RedirectionInformation.load(params[:_redirection_information])
+				end
 			elsif flash.has_key?(:_redirection_information)
 				info = RedirectionInformation.load(flash[:_redirection_information], true, false)
 			elsif request.headers["Referer"]
@@ -161,7 +165,8 @@ private
 			parameters = params.merge(:_redirection_information =>
 				current_redirection_info.marshal)
 		else
-			parameters = params
+			parameters = params.merge(:_redirection_information =>
+				NoRedirectionInformation.new.marshal)
 		end
 		return ControllerRedirectionInformation.new(
 			controller_path, action_name, parameters, request.method)

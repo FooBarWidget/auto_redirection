@@ -1,6 +1,10 @@
 require File.dirname(__FILE__) + '/abstract_unit'
 
 class ApplicationController < ActionController::Base
+	def root_path
+		return '/books/show/123'
+	end
+	
 private
 	def logged_in?
 		return session[:logged_in]

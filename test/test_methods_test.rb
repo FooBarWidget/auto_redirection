@@ -19,14 +19,14 @@ class TestMethodsTest < ActionController::IntegrationTest
 		get('/login/login_form', nil)
 		assert_response :ok
 		# The login page knows that he came from /comments/create.
-		assert_came_from('/comments/create', { :summary => "hi" })
+		assert_came_from('/comments/create', :summary => "hi")
 		
 		# He logs in but entered the wrong password.
 		post("/login/process_login", :password => 'wrong')
 		# So the login page is redisplayed.
 		assert_response :ok
 		# The login page still knows that he came from /comments/create.
-		assert_came_from('/comments/create', { :summary => "hi" })
+		assert_came_from('/comments/create', :summary => "hi")
 		
 		# He logs in, this time with the correct password.
 		post("/login/process_login", :password => 'secret')
@@ -69,11 +69,23 @@ class TestMethodsTest < ActionController::IntegrationTest
 		post('/comments/create', :summary => 'hi')
 		# But he isn't logged in, so he's redirected to the login page.
 		assert_redirected_to '/login/login_form'
-
+		
+		# User loads the login page.
+		get('/login/login_form')
+		
 		# User logs in.
 		post('/login/process_login', :password => 'secret')
 		# /comments/create with the original parameters. That is, we are
 		# dealing with a non-GET redirection.
 		assert_redirection_with_method(:post, '/comments/create', :summary => 'hi')
+		
+		# Follow this instruction, i.e. let us be redirected to
+		# /comments/create.
+		follow_redirection_with_method!
+		
+		# NOTE: the first '/comments/create' request didn't have any
+		# redirection information. We're redirected back to '/comments/create',
+		# and in this case we expect it not to consult the HTTP Referer header.
+		assert_equal "Comment 'hi' created!", @response.body
 	end
 end

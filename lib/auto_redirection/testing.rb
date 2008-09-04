@@ -158,6 +158,9 @@ protected
 	#   # But he isn't logged in, so he's redirected to the login page.
 	#   assert_redirected_to '/login/login_form'
 	#   
+	#   # User loads the login page.
+	#   get('/login/login_form')
+	#   
 	#   # User logs in.
 	#   post('/login/process_login', :password => 'secret')
 	#   # The login controller instructs the browser to POST to
@@ -194,9 +197,12 @@ protected
 	# See +assert_redirection_with_method+ for an example.
 	def follow_redirection_with_method!
 		result = parse_post_redirection_page
-		params = result[:params].merge(:_redirection_information => result[:redirection_data])
+		params = result[:params]
+		if result[:redirection_data]
+			params = result[:params].merge(:_redirection_information =>
+				result[:redirection_data])
+		end
 		headers = { :HTTP_REFERER => @_referer }
-		old_referer = @_referer
 		case result[:method]
 		when :post
 			post(result[:path], params, headers)
@@ -226,6 +232,10 @@ protected
 		else
 			return info
 		end
+	end
+	
+	def clear_referer!
+		@_referer = nil
 	end
 
 private
