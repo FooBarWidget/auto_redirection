@@ -45,7 +45,9 @@ module Testing
 protected
 	# Performs a GET request, just like the normal +get+ method in integration
 	# tests (ActionController::Integration::Session#get). The last request's
-	# URI will be automatically passed as the "Referer" HTTP header.
+	# URI will be automatically passed as the "Referer" HTTP header, and any
+	# redirection information that the last controller action tried to pass,
+	# will be automatically passed on.
 	#
 	#   get "/books/show/1"
 	#   # "/books/show/1" is now recorded as the referer.
@@ -62,7 +64,9 @@ protected
 	
 	# Performs a POST request, just like the normal +post+ method in integration
 	# tests (ActionController::Integration::Session#post). The last request's
-	# URI will be automatically passed as the "Referer" HTTP header.
+	# URI will be automatically passed as the "Referer" HTTP header, and any
+	# redirection information that the last controller action tried to pass,
+	# will be automatically passed on.
 	#
 	# See +get_with_referer+ for an example.
 	def post(path, parameters = nil, headers = nil)
@@ -72,9 +76,11 @@ protected
 		return result
 	end
 	
-	# Performs a PUT request, just like the normal +get+ method in integration
-	# tests (ActionController::Integration::Session#get). The last request's
-	# URI will be automatically passed as the "Referer" HTTP header.
+	# Performs a PUT request, just like the normal +put+ method in integration
+	# tests (ActionController::Integration::Session#put). The last request's
+	# URI will be automatically passed as the "Referer" HTTP header, and any
+	# redirection information that the last controller action tried to pass,
+	# will be automatically passed on.
 	#
 	# See +get_with_referer+ for an example.
 	def put(path, parameters = nil, headers = nil)
@@ -85,9 +91,10 @@ protected
 	end
 	
 	# Performs a DELETE request, just like the normal +delete+ method in integration
-	# tests (ActionController::Integration::Session#delete). The last recorded
-	# referer will be passed as the "Referer" HTTP header. After the request,
-	# the current path will be recorded as the new referer.
+	# tests (ActionController::Integration::Session#delete). The last request's
+	# URI will be automatically passed as the "Referer" HTTP header, and any
+	# redirection information that the last controller action tried to pass,
+	# will be automatically passed on.
 	#
 	# See +get_with_referer+ for an example.
 	def delete(path, parameters = nil, headers = nil)
