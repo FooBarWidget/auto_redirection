@@ -25,8 +25,14 @@ module AutoRedirection
 
 class RedirectionInformation
 	def self.load(data, encrypted = true, ascii7 = true)
+		if data.nil?
+			raise ArgumentError, "The 'data' argument must be a String."
+		end
 		if encrypted
 			data = Encryption.decrypt(data, ascii7)
+			if data.nil?
+				raise SecurityError, "The redirection information cannot be decrypted."
+			end
 		end
 		info = Marshal.load(data)
 		if info[:url]

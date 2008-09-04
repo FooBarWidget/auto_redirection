@@ -135,6 +135,8 @@ protected
 private
 	# Retrieve the redirection information that has been passed to the current
 	# controller action. Returns nil if no redirection information has been passed.
+	#
+	# Raises SecurityError if the redirection information cannot be decrypted.
 	def get_redirection_information
 		if !@_redirection_information_given
 			if params.has_key?(:_redirection_information)

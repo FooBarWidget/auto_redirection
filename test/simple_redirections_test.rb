@@ -40,6 +40,15 @@ class TestController < ActionController::Base
 	def action_pass_redirection_information
 		render :inline => '<%= pass_redirection_information %>'
 	end
+	
+	def action_get_redirection_information
+		begin
+			get_redirection_information
+			render :text => 'ok'
+		rescue => e
+			render :text => e.class.to_s
+		end
+	end
 end
 
 class UsersController < ActionController::Base
@@ -177,5 +186,10 @@ class SimpleRedirectionTest < ActionController::TestCase
 		assert @controller.send(:match_exclusion_list, info, '/users/create')
 		
 		assert !@controller.send(:match_exclusion_list, info, '/users')
+	end
+	
+	test "get_redirection_information raises SecurityError if the redirection information cannot be decrypted" do
+		get(:action_get_redirection_information, { :_redirection_information => "foo" })
+		assert_equal 'SecurityError', @response.body
 	end
 end
