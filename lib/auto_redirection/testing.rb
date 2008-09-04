@@ -22,38 +22,103 @@
 require 'uri'
 
 module AutoRedirection
+
+# This module allows one to unit test auto-redirections in Ruby on Rails
+# integration tests. Include this module in your integration test class, and
+# its methods will become available in the integration test.
+#
+# Furthermore, this module extends the behavior of some integration test
+# methods, such as +get+ and +post+.
+#
+# Synposis:
+#
+#  require 'auto_redirection/testing'
+#  
+#  class SomeTest < ActionController::IntegrationTest
+#     include AutoRedirection::Testing
+#     
+#     def test_something
+#        ...
+#     end
+#  end
 module Testing
 protected
+	# Performs a GET request, just like the normal +get+ method in integration
+	# tests (ActionController::Integration::Session#get). The last request's
+	# URI will be automatically passed as the "Referer" HTTP header.
+	#
+	#   get "/books/show/1"
+	#   # "/books/show/1" is now recorded as the referer.
+	#   
+	#   get_with_referer "/books/show/2"
+	#   puts @request.headers["Referer"]
+	#   # => "/books/show/1"
 	def get(path, parameters = nil, headers = nil)
+		result = super(path, add_redirection_information(parameters),
+			add_referer(headers))
 		@_referer = path
-		super(path, parameters, headers)
+		return result
 	end
 	
+	# Performs a POST request, just like the normal +post+ method in integration
+	# tests (ActionController::Integration::Session#post). The last request's
+	# URI will be automatically passed as the "Referer" HTTP header.
+	#
+	# See +get_with_referer+ for an example.
 	def post(path, parameters = nil, headers = nil)
+		result = super(path, add_redirection_information(parameters),
+			add_referer(headers))
 		@_referer = path
-		super(path, parameters, headers)
+		return result
 	end
 	
-	def get_with_referer(path, parameters = nil, headers = nil)
-		if headers
-			headers = headers.with_indifferent_access
-		else
-			headers = HashWithIndifferentAccess.new
-		end
-		headers.reverse_merge!(:HTTP_REFERER => @_referer)
-		get(path, parameters, headers)
+	# Performs a PUT request, just like the normal +get+ method in integration
+	# tests (ActionController::Integration::Session#get). The last request's
+	# URI will be automatically passed as the "Referer" HTTP header.
+	#
+	# See +get_with_referer+ for an example.
+	def put(path, parameters = nil, headers = nil)
+		result = super(path, add_redirection_information(parameters),
+			add_referer(headers))
+		@_referer = path
+		return result
 	end
 	
-	def post_with_referer(path, parameters = nil, headers = nil)
-		if headers
-			headers = headers.with_indifferent_access
-		else
-			headers = HashWithIndifferentAccess.new
-		end
-		headers.reverse_merge!(:HTTP_REFERER => @_referer)
-		post(path, parameters, headers)
+	# Performs a DELETE request, just like the normal +delete+ method in integration
+	# tests (ActionController::Integration::Session#delete). The last recorded
+	# referer will be passed as the "Referer" HTTP header. After the request,
+	# the current path will be recorded as the new referer.
+	#
+	# See +get_with_referer+ for an example.
+	def delete(path, parameters = nil, headers = nil)
+		result = super(path, add_redirection_information(parameters),
+			add_referer(headers))
+		@_referer = path
+		return result
 	end
 	
+	# Asserts that the redirection information that the last controller
+	# action received is equal to +path+.
+	#
+	# If +parameters+ is not nil, then it will also assert that the
+	# parameters in the redirection information is equal to +parameters+. (To
+	# assert that the parameters are empty, pass an empty hash.)
+	#
+	# Example:
+	#
+	#   # User views a book.
+	#   get('/books/show/1')
+	#   
+	#   # On that page, the user clicks on the 'Login' link.
+	#   get('/login/login_form')
+	#   # Assert that the login page knows that he came from /books/show/1
+	#   assert_came_from('/books/show/1')
+	#   
+	#   # The user enters the wrong password and clicks on 'Submit'.
+	#   post('/login/process_login', :username => 'foo', :password => 'wrong')
+	#   # Assert that the login form page told 'process_login' that we came
+	#   # from /books/show/1
+	#   assert_came_from('/books/show/1')
 	def assert_came_from(path, parameters = nil)
 		info = @controller.send(:get_redirection_information)
 		if info.nil?
@@ -71,6 +136,34 @@ protected
 		end
 	end
 	
+	# Asserts that the last controller action tried to redirect the browser
+	# to page using a non-GET request.
+	#
+	# +method+ is a Symbol which specifies the HTTP method, e.g. +:post+ or
+	# +:delete+. +path+ is the path that the browser should be redirected to.
+	# +parameters+ is the exepcted HTTP parameters.
+	#
+	# Do not use this method with normal redirections (e.g. redirections to
+	# GET requests). Use +assert_redirected_to+ in that case.
+	#
+	#   # User posts a comment.
+	#   post('/comments/create', :summary => 'hi')
+	#   # But he isn't logged in, so he's redirected to the login page.
+	#   assert_redirected_to '/login/login_form'
+	#   
+	#   # User logs in.
+	#   post('/login/process_login', :password => 'secret')
+	#   # The login controller instructs the browser to POST to
+	#   # /comments/create with the original parameters. That is, we are
+	#   # dealing with a non-GET redirection.
+	#   assert_redirection_with_method(:post, '/comments/create', :summary => 'hi')
+	#   
+	#   # Follow this instruction, i.e. let us be redirected to
+	#   # /comments/create.
+	#   follow_redirection_with_method!
+	#   
+	#   # Comment has been posted.
+	#   assert_not_equal 0, Comment.find(:all).size
 	def assert_redirection_with_method(method, path, parameters = nil)
 		result = parse_post_redirection_page
 		assert_equal path, result[:path]
@@ -84,32 +177,87 @@ protected
 		end
 	end
 	
-	def get_redirection_information_from_form
-		hidden_field = css_select("input[name='_redirection_information']").first
-		if !hidden_field
-			raise Test::Unit::AssertionFailedError,
-				"There is no redirection information inside the form."
-		end
-		return hidden_field['value']
-	end
-	
+	# If the last controller action wants to redirect the browser with a
+	# non-GET request, then this method will follow this redirection. Otherwise,
+	# this method will raise an assertion error.
+	#
+	# Do not use this method with normal redirections (e.g. redirections to
+	# GET requests). Use +follow_redirect!+ in that case.
+	#
+	# See +assert_redirection_with_method+ for an example.
 	def follow_redirection_with_method!
 		result = parse_post_redirection_page
 		params = result[:params].merge(:_redirection_information => result[:redirection_data])
+		headers = { :HTTP_REFERER => @_referer }
+		old_referer = @_referer
 		case result[:method]
 		when :post
-			post(result[:path], params)
+			post(result[:path], params, headers)
 		when :put
-			put(result[:path], params)
+			put(result[:path], params, headers)
 		when :delete
-			delete(result[:path], params)
+			delete(result[:path], params, headers)
 		else
 			raise Test::Unit::AssertionFailedError,
 				"Unknown method '#{result[:method]}'."
 		end
 	end
+	
+	# Parse the last controller action's response and extract any redirection
+	# information that the +pass_redirection_information+ view helper has
+	# outputted. This information -- as the raw parameter string -- is
+	# returned, and may be passed to any controller action (via HTTP
+	# parameters) as redirection information.
+	#
+	# Raises an assertion error if there is no redirection information in the
+	# response body.
+	def get_redirection_information_from_form
+		info = try_get_redirection_information_from_form
+		if info.nil?
+			raise Test::Unit::AssertionFailedError,
+				"There is no redirection information inside the form."
+		else
+			return info
+		end
+	end
 
 private
+	def add_redirection_information(params)
+		if params
+			params = params.with_indifferent_access
+		else
+			params = HashWithIndifferentAccess.new
+		end
+		if !params.has_key?(:_redirection_information)
+			info = try_get_redirection_information_from_form
+			if info
+				params[:_redirection_information] = info
+			end
+		end
+		return params
+	end
+	
+	def add_referer(headers)
+		if headers
+			headers = headers.with_indifferent_access
+		else
+			headers = HashWithIndifferentAccess.new
+		end
+		headers.reverse_merge!(:HTTP_REFERER => @_referer)
+		return headers
+	end
+	
+	def try_get_redirection_information_from_form
+		if @response.nil?
+			return nil
+		end
+		hidden_field = css_select("input[name='_redirection_information']").first
+		if !hidden_field
+			return nil
+		end
+		return hidden_field['value']
+	end
+	
 	def parse_query_string(str)
 		return ActionController::AbstractRequest.parse_query_parameters(str)
 	end
@@ -149,4 +297,5 @@ private
 		return result
 	end
 end
-end # AutoRedirection
+
+end # module AutoRedirection
