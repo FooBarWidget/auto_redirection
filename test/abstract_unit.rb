@@ -11,6 +11,7 @@ require 'action_controller/integration'
 require 'action_view/test_case'
 
 require 'auto_redirection'
+require 'auto_redirection/testing'
 
 # Show backtraces for deprecated behavior for quicker cleanup.
 ActiveSupport::Deprecation.debug = true
