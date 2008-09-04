@@ -246,7 +246,7 @@ module AutoRedirection
 	# A view template for redirecting the browser back to a place, while
 	# sending a POST request.
 	TEMPLATE_FOR_POST_REDIRECTION = %q{
-		<% form_tag(@form_action, { :method => @redirection_information.method, :id => 'form' }) do %>
+		<% form_tag(@form_action, { :method => @redirection_information.method, :id => '_auto_redirection_form' }) do %>
 			<div class="nested_redirection_information">
 			<%= hidden_field_tag('_redirection_information', @nested_redirection_information) if @nested_redirection_information %>
 			</div>

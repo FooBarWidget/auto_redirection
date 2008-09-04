@@ -43,7 +43,7 @@ end
 module TestHelpers
 private
 	def form_action
-		return CGI.unescapeHTML(css_select("#form").first['action'])
+		return CGI.unescapeHTML(css_select("#_auto_redirection_form").first['action'])
 	end
 	
 	def parse_form_action
