@@ -64,6 +64,9 @@ class Encryption
 		end
 		if ascii7
 			data = decode_base64_url(data)
+			if data.nil? || data.empty?
+				return nil
+			end
 		end
 		decrypted_data = aes(:decrypt, AutoRedirection.encryption_key, data)
 		if decrypted_data.size < SIGNATURE_SIZE
