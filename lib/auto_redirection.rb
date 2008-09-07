@@ -260,7 +260,7 @@ module AutoRedirection
 		<% end %>
 		<script type="text/javascript">
 		//<![CDATA[
-			document.getElementById('form').submit();
+			document.getElementById('_auto_redirection_form').submit();
 			setTimeout(function() {
 				//# If server doesn't respond within 1 second, then
 				//# display a wait message.
