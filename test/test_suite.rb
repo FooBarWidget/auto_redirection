@@ -22,3 +22,4 @@
 require File.dirname(__FILE__) + '/simple_redirections_test'
 require File.dirname(__FILE__) + '/nested_redirections_test'
 require File.dirname(__FILE__) + '/test_methods_test'
+require 'mocha'

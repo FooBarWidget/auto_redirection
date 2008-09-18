@@ -33,7 +33,12 @@ class TestController < ActionController::Base
 	end
 	
 	def action_save_redirection_information
-		save_redirection_information
+		if params[:what]
+			what = params[:what].to_sym
+		else
+			what = :current_request
+		end
+		save_redirection_information(what)
 		render :nothing => true
 	end
 	
@@ -192,5 +197,14 @@ class SimpleRedirectionTest < ActionController::TestCase
 	test "get_redirection_information raises SecurityError if the redirection information cannot be decrypted" do
 		get(:action_get_redirection_information, { :_redirection_information => "foo" })
 		assert_equal 'SecurityError', @response.body
+	end
+	
+	test "get_redirection_information(:passed) saves the passed direction information into the flash" do
+		info = AutoRedirection::UrlRedirectionInformation.new('http://www.foo.com')
+		@controller.expects(:get_redirection_information).returns(info)
+		post(:action_save_redirection_information, :hello => "world", :what => :passed)
+		info2 = AutoRedirection::RedirectionInformation.load(
+			@controller.response.flash[:_redirection_information], true, false)
+		assert_equal info, info2
 	end
 end

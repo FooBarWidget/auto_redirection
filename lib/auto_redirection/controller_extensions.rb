@@ -22,18 +22,41 @@ module AutoRedirection
 
 module ControllerExtensions
 protected
+	# Saves redirection information into the flash. +what+ may be either
+	# +:current_request+ or +:passed+.
+	#
+	# == :current_request
 	# Saves the current controller's name, action, HTTP method and parameters
 	# as redirection information into the flash. This allows the next controller
 	# action to use this information to redirect back to this controller action,
 	# with the same HTTP method and parameters.
 	#
 	# The redirection information that the current controller action has
-	# received is also saved, so that nested redirections is possible.
-	def save_redirection_information
-		flash[:_redirection_information] =
-			redirection_information_for_current_request.marshal(true, false)
-		logger.debug("Auto-Redirection: saving redirection information " <<
-			"for: #{controller_path}/#{action_name} (#{request.method})")
+	# received is also saved, so that nested redirections are possible.
+	#
+	# == :passed
+	# Saves the redirection information, that the current controller action has
+	# received, into the flash. This allows the next controller action to use
+	# this information to redirect back to the place prior to this controller
+	# action.
+	#
+	# The redirection information that the previous controller action had
+	# received is also saved, so that nested redirections are possible.
+	def save_redirection_information(what = :current_request)
+		case what
+		when :current_request
+			flash[:_redirection_information] =
+				redirection_information_for_current_request.marshal(true, false)
+			logger.debug("Auto-Redirection: saving redirection information " <<
+				"for: #{controller_path}/#{action_name} (#{request.method})")
+		when :passed
+			info = get_redirection_information
+			flash[:_redirection_information] = info.marshal(true, false)
+			logger.debug("Auto-Redirection: saving redirection information " <<
+				"for: #{info.path} (#{request.method})")
+		else
+			raise ArgumentError
+		end
 	end
 	
 	def redirection_parameter_for_current_request
