@@ -279,5 +279,6 @@ require 'auto_redirection/encryption'
 
 ActionController::Base.send(:include, AutoRedirection::ControllerExtensions)
 ActionView::Base.send(:include, AutoRedirection::ViewHelpers)
+ActionController::UploadedStringIO.send(:include, AutoRedirection::MarshalExtensions)
 ActionController::UploadedFile.send(:include, AutoRedirection::MarshalExtensions)
 
